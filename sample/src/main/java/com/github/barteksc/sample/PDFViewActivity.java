@@ -21,12 +21,16 @@ import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.graphics.Color;
 import android.net.Uri;
+import android.os.Bundle;
 import android.provider.OpenableColumns;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.widget.Toast;
 
 import com.github.barteksc.pdfviewer.PDFView;
@@ -37,18 +41,17 @@ import com.github.barteksc.pdfviewer.scroll.DefaultScrollHandle;
 import com.github.barteksc.pdfviewer.util.FitPolicy;
 import com.shockwave.pdfium.PdfDocument;
 
-import org.androidannotations.annotations.AfterViews;
-import org.androidannotations.annotations.EActivity;
-import org.androidannotations.annotations.NonConfigurationInstance;
-import org.androidannotations.annotations.OnActivityResult;
-import org.androidannotations.annotations.OptionsItem;
-import org.androidannotations.annotations.OptionsMenu;
-import org.androidannotations.annotations.ViewById;
+//import org.androidannotations.annotations.AfterViews;
+//import org.androidannotations.annotations.EActivity;
+//import org.androidannotations.annotations.NonConfigurationInstance;
+//import org.androidannotations.annotations.OnActivityResult;
+//import org.androidannotations.annotations.OptionsItem;
+//import org.androidannotations.annotations.OptionsMenu;
+//import org.androidannotations.annotations.ViewById;
 
 import java.util.List;
 
-@EActivity(R.layout.activity_main)
-@OptionsMenu(R.menu.options)
+//@OptionsMenu(R.menu.options)
 public class PDFViewActivity extends AppCompatActivity implements OnPageChangeListener, OnLoadCompleteListener,
         OnPageErrorListener {
 
@@ -60,18 +63,46 @@ public class PDFViewActivity extends AppCompatActivity implements OnPageChangeLi
     public static final String SAMPLE_FILE = "sample.pdf";
     public static final String READ_EXTERNAL_STORAGE = "android.permission.READ_EXTERNAL_STORAGE";
 
-    @ViewById
+    //    @ViewById
     PDFView pdfView;
 
-    @NonConfigurationInstance
+    //    @NonConfigurationInstance
     Uri uri;
 
-    @NonConfigurationInstance
+    //    @NonConfigurationInstance
     Integer pageNumber = 0;
 
     String pdfFileName;
 
-    @OptionsItem(R.id.pickFile)
+
+    @Override
+    protected void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+        pdfView = findViewById(R.id.pdfView);
+        afterViews();
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        // 加载菜单资源文件
+        getMenuInflater().inflate(R.menu.options, menu);
+        return true;  // 返回true表示显示菜单
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        // 处理菜单项点击事件
+        if (item.getItemId() == R.id.pickFile) {
+            // 处理点击事件
+            pickFile();
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
+    }
+
+
+    //    @OptionsItem(R.id.pickFile)
     void pickFile() {
         int permissionCheck = ContextCompat.checkSelfPermission(this,
                 READ_EXTERNAL_STORAGE);
@@ -100,7 +131,7 @@ public class PDFViewActivity extends AppCompatActivity implements OnPageChangeLi
         }
     }
 
-    @AfterViews
+    //    @AfterViews
     void afterViews() {
         pdfView.setBackgroundColor(Color.LTGRAY);
         if (uri != null) {
@@ -115,12 +146,14 @@ public class PDFViewActivity extends AppCompatActivity implements OnPageChangeLi
         pdfFileName = assetFileName;
 
         pdfView.fromAsset(SAMPLE_FILE)
+//                .pages(0, 2, 1, 3, 3, 3)
                 .defaultPage(pageNumber)
                 .onPageChange(this)
                 .enableAnnotationRendering(true)
                 .onLoad(this)
                 .scrollHandle(new DefaultScrollHandle(this))
                 .spacing(10) // in dp
+                .swipeHorizontal(true)
                 .onPageError(this)
                 .pageFitPolicy(FitPolicy.BOTH)
                 .load();
@@ -131,6 +164,7 @@ public class PDFViewActivity extends AppCompatActivity implements OnPageChangeLi
 
         pdfView.fromUri(uri)
                 .defaultPage(pageNumber)
+//                .swipeHorizontal(true)
                 .onPageChange(this)
                 .enableAnnotationRendering(true)
                 .onLoad(this)
@@ -140,10 +174,11 @@ public class PDFViewActivity extends AppCompatActivity implements OnPageChangeLi
                 .load();
     }
 
-    @OnActivityResult(REQUEST_CODE)
-    public void onResult(int resultCode, Intent intent) {
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
         if (resultCode == RESULT_OK) {
-            uri = intent.getData();
+            uri = data.getData();
             displayFromUri(uri);
         }
     }
